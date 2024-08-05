@@ -52,6 +52,9 @@ class BASE:
     def model_type(self, state_dict, prefix=""):
         return ModelType.EPS
 
+    def clip_target(self, state_dict):
+        return {}
+
     def inpaint_model(self):
         return self.unet_config["in_channels"] > 4
 
@@ -137,7 +140,7 @@ class SD15(BASE):
         return utils.state_dict_prefix_replace(state_dict, replace_prefix)
 
     def clip_target(self, state_dict={}):
-        return ['clip_l']
+        return {'clip_l': 'text_encoder'}
 
 
 class SD20(BASE):
@@ -184,7 +187,7 @@ class SD20(BASE):
         return state_dict
 
     def clip_target(self, state_dict={}):
-        return ['clip_h']
+        return {'clip_h': 'text_encoder'}
 
 
 class SD21UnclipL(SD20):
@@ -248,7 +251,7 @@ class SDXLRefiner(BASE):
         return state_dict_g
 
     def clip_target(self, state_dict={}):
-        return ["clip_g"]
+        return {'clip_g': 'text_encoder'}
 
 
 class SDXL(BASE):
@@ -316,7 +319,7 @@ class SDXL(BASE):
         return state_dict_g
 
     def clip_target(self, state_dict={}):
-        return ['clip_l', 'clip_g']
+        return {'clip_l': 'text_encoder', 'clip_g': 'text_encoder_2'}
 
 
 class SSD1B(SDXL):
@@ -387,9 +390,6 @@ class SVD_img2vid(BASE):
 
     sampling_settings = {"sigma_max": 700.0, "sigma_min": 0.002}
 
-    def clip_target(self, state_dict={}):
-        return None
-
 
 class SV3D_u(SVD_img2vid):
     unet_config = {
@@ -442,9 +442,6 @@ class Stable_Zero123(BASE):
     clip_vision_prefix = "cond_stage_model.model.visual."
 
     latent_format = latent.SD15
-
-    def clip_target(self, state_dict={}):
-        return None
 
 
 class SD_X4Upscaler(SD20):
@@ -512,7 +509,7 @@ class Stable_Cascade_C(BASE):
         return state_dict
 
     def clip_target(self, state_dict={}):
-        return ['clip_g']
+        return {'clip_g': 'text_encoder'}
 
 
 class Stable_Cascade_B(Stable_Cascade_C):
@@ -575,21 +572,19 @@ class SD3(BASE):
     text_encoder_key_prefix = ["text_encoders."]
 
     def clip_target(self, state_dict={}):
-        clip_l = False
-        clip_g = False
-        t5 = False
-        dtype_t5 = None
+        result = {}
         pref = self.text_encoder_key_prefix[0]
-        if "{}clip_l.transformer.text_model.final_layer_norm.weight".format(pref) in state_dict:
-            clip_l = True
-        if "{}clip_g.transformer.text_model.final_layer_norm.weight".format(pref) in state_dict:
-            clip_g = True
-        t5_key = "{}t5xxl.transformer.encoder.final_layer_norm.weight".format(pref)
-        if t5_key in state_dict:
-            t5 = True
-            dtype_t5 = state_dict[t5_key].dtype
 
-        return dict(clip_l=clip_l, clip_g=clip_g, t5=t5, dtype_t5=dtype_t5)
+        if "{}clip_l.transformer.text_model.final_layer_norm.weight".format(pref) in state_dict:
+            result['clip_l'] = 'text_encoder'
+
+        if "{}clip_g.transformer.text_model.final_layer_norm.weight".format(pref) in state_dict:
+            result['clip_g'] = 'text_encoder_2'
+
+        if "{}t5xxl.transformer.encoder.final_layer_norm.weight".format(pref) in state_dict:
+            result['t5xxl'] = 'text_encoder_3'
+
+        return result
 
 
 class StableAudio(BASE):
@@ -615,9 +610,6 @@ class StableAudio(BASE):
         replace_prefix = {"": "model.model."}
         return utils.state_dict_prefix_replace(state_dict, replace_prefix)
 
-    def clip_target(self, state_dict={}):
-        return ['sa_t5']
-
 
 class AuraFlow(BASE):
     unet_config = {
@@ -634,9 +626,6 @@ class AuraFlow(BASE):
 
     vae_key_prefix = ["vae."]
     text_encoder_key_prefix = ["text_encoders."]
-
-    def clip_target(self, state_dict={}):
-        return ['aura_t5']
 
 
 class HunyuanDiT(BASE):
@@ -657,9 +646,6 @@ class HunyuanDiT(BASE):
 
     vae_key_prefix = ["vae."]
     text_encoder_key_prefix = ["text_encoders."]
-
-    def clip_target(self, state_dict={}):
-        return ['hunyuan_t5']
 
 
 class HunyuanDiT1(HunyuanDiT):
@@ -695,12 +681,16 @@ class Flux(BASE):
     text_encoder_key_prefix = ["text_encoders."]
 
     def clip_target(self, state_dict={}):
-        dtype_t5 = None
+        result = {}
         pref = self.text_encoder_key_prefix[0]
-        t5_key = "{}t5xxl.transformer.encoder.final_layer_norm.weight".format(pref)
-        if t5_key in state_dict:
-            dtype_t5 = state_dict[t5_key].dtype
-        return dict(t5=True, dtype_t5=dtype_t5)
+
+        if "{}clip_l.transformer.text_model.final_layer_norm.weight".format(pref) in state_dict:
+            result['clip_l'] = 'text_encoder'
+
+        if "{}t5xxl.transformer.encoder.final_layer_norm.weight".format(pref) in state_dict:
+            result['t5xxl'] = 'text_encoder_2'
+
+        return result
 
 
 class FluxSchnell(Flux):
