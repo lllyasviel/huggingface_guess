@@ -37,6 +37,8 @@ class BASE:
     memory_usage_factor = 2.0
 
     manual_cast_dtype = None
+    unet_target = 'unet'
+    vae_target = 'vae'
 
     @classmethod
     def matches(s, unet_config, state_dict=None):
@@ -681,6 +683,8 @@ class Flux(BASE):
 
     vae_key_prefix = ["vae."]
     text_encoder_key_prefix = ["text_encoders."]
+
+    unet_target = 'transformer'
 
     def clip_target(self, state_dict={}):
         result = {}
