@@ -662,6 +662,8 @@ class HunyuanDiT1(HunyuanDiT):
 
 
 class Flux(BASE):
+    huggingface_repo = 'black-forest-labs/FLUX.1-dev'
+
     unet_config = {
         "image_model": "flux",
         "guidance_embed": True,
@@ -694,6 +696,8 @@ class Flux(BASE):
 
 
 class FluxSchnell(Flux):
+    huggingface_repo = 'black-forest-labs/FLUX.1-schnell'
+
     unet_config = {
         "image_model": "flux",
         "guidance_embed": False,
