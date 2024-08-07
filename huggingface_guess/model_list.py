@@ -632,6 +632,7 @@ class AuraFlow(BASE):
 
 class HunyuanDiT(BASE):
     unet_config = {
+        "image_model": "hydit",
     }
 
     unet_extra_config = {
@@ -651,6 +652,7 @@ class HunyuanDiT(BASE):
 
 class HunyuanDiT1(HunyuanDiT):
     unet_config = {
+        "image_model": "hydit1",
     }
 
     unet_extra_config = {}
@@ -665,6 +667,7 @@ class Flux(BASE):
     huggingface_repo = 'black-forest-labs/FLUX.1-dev'
 
     unet_config = {
+        "image_model": "flux",
         "guidance_embed": True,
     }
 
@@ -700,6 +703,7 @@ class FluxSchnell(Flux):
     huggingface_repo = 'black-forest-labs/FLUX.1-schnell'
 
     unet_config = {
+        "image_model": "flux",
         "guidance_embed": False,
     }
 
